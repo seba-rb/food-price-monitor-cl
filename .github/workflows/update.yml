@@ -1,0 +1,132 @@
+name: Update and deploy ODEPA prices
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"
+      timezone: America/Santiago
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: Rebuild every available annual source from 2017
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: food-price-monitor-update
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject manual runs outside the default branch
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RUN_REF: ${{ github.ref_name }}
+        run: |
+          if [[ "$RUN_REF" != "$DEFAULT_BRANCH" ]]; then
+            echo "::error::Run this workflow from the default branch ($DEFAULT_BRANCH)."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v6.0.3
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore SQLite cache
+        id: sqlite-cache
+        uses: actions/cache/restore@v6.0.0
+        with:
+          path: data/prices.db*
+          key: food-price-monitor-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            food-price-monitor-db-${{ runner.os }}-
+
+      - name: Run deterministic validation
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Refresh and validate published data
+        id: refresh
+        env:
+          FULL_REFRESH: ${{ inputs.full_refresh || false }}
+        run: |
+          args=()
+          if [[ "$FULL_REFRESH" == "true" ]]; then
+            args+=(--full-refresh)
+          fi
+          python3 pipeline/fetch_odepa.py \
+            --summary-file "$RUNNER_TEMP/refresh-summary.json" \
+            "${args[@]}"
+
+      - name: Commit and publish changed public data
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- site/data/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore(data): refresh ODEPA prices"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Save SQLite cache
+        if: success()
+        continue-on-error: true
+        uses: actions/cache/save@v6.0.0
+        with:
+          path: data/prices.db*
+          key: food-price-monitor-db-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Write workflow summary
+        if: always()
+        env:
+          REFRESH_SUMMARY: ${{ runner.temp }}/refresh-summary.json
+          COMMIT_SHA: ${{ steps.commit.outputs.sha }}
+          DATA_CHANGED: ${{ steps.commit.outputs.changed }}
+          FULL_REFRESH: ${{ inputs.full_refresh || false }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          summary_path = Path(os.environ["REFRESH_SUMMARY"])
+          destination = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          lines = ["## ODEPA refresh", ""]
+          if summary_path.is_file():
+              data = json.loads(summary_path.read_text(encoding="utf-8"))
+              files = data.get("changed_files", [])
+              lines.extend([
+                  f"- Source years: {', '.join(map(str, data.get('source_years', [])))}",
+                  f"- Fallback year: {data.get('fallback_year') or 'none'}",
+                  f"- Latest week: {data.get('latest_week_start') or 'unavailable'}",
+                  f"- Accepted rows: {data.get('accepted_rows', 0)}",
+                  f"- Changed public files: {', '.join(files) if files else 'none'}",
+              ])
+          else:
+              lines.append("- Refresh summary: unavailable; an earlier step failed.")
+          lines.extend([
+              f"- Full refresh: {os.environ.get('FULL_REFRESH', 'false')}",
+              f"- Data commit pushed: {os.environ.get('DATA_CHANGED') or 'not available'}",
+              f"- Commit SHA: {os.environ.get('COMMIT_SHA') or 'not available'}",
+              "- Netlify deploy: handled by the connected Git integration when a data commit is pushed.",
+              "",
+          ])
+          with destination.open("a", encoding="utf-8") as output:
+              output.write("\n".join(lines))
+          PY

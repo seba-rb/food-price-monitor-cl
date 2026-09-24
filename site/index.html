@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f8fb">
+    <meta name="description" content="Consulta precios de referencia de alimentos en Chile, su evolución semanal y el catálogo completo de ODEPA.">
+    <title>Precios de alimentos — Chile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css?v=2026-09-23-ipc-comparison-preview">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" integrity="sha512-Y51n9mtKTVBh3Jbx5pZSJNDDMyY+yGe77DGtBPzRlgsf/YLCh13kSZ3JmfHGzYFCmOndraf0sQgfM654b7dJ3w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/app.js?v=2026-09-23-point-benchmarks-final" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Precios de alimentos, inicio">
+        <span class="brand__name">Precios de alimentos</span>
+      </a>
+      <p class="header-note">Datos públicos · Oficina de Estudios y Políticas Agrarias</p>
+      <a id="header-nav-link" class="header-link" href="#/productos">Todos los productos <span aria-hidden="true">→</span></a>
+    </header>
+
+    <main id="contenido">
+      <section id="page-hero" class="hero" aria-labelledby="page-title">
+        <div class="hero__copy">
+          <p class="eyebrow">Chile · precios al consumidor</p>
+          <h1 id="page-title">Precios de alimentos en Chile</h1>
+          <p id="page-lede" class="hero__lede">Consulta precios de referencia y su evolución semanal en supermercados y otros puntos de monitoreo.</p>
+          <div id="home-metadata" class="source-meta" aria-label="Información de publicación">
+            <span><small>Última actualización</small><strong id="data-updated">Consultando…</strong></span>
+            <span><small>Semana de referencia</small><strong id="data-week">Consultando…</strong></span>
+            <span><small>Fuente</small><a href="https://datos.odepa.gob.cl/dataset/precios-consumidor" target="_blank" rel="noreferrer">ODEPA</a></span>
+          </div>
+        </div>
+        <aside class="methodology-note" aria-label="Sobre estos datos">
+          <span class="methodology-note__icon" aria-hidden="true">i</span>
+          <div>
+            <h2>Sobre estos datos</h2>
+            <p>Precios promedio observados en supermercados y otros puntos de monitoreo. No corresponden a una canasta ponderada ni a un IPC.</p>
+            <div class="methodology-links">
+              <button id="open-interpretation" class="methodology-link" type="button">Cómo interpretar estos datos <span aria-hidden="true">→</span></button>
+              <button id="open-data-notes" class="methodology-link" type="button">Notas y cobertura <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <dialog id="info-drawer" class="info-drawer" aria-labelledby="info-drawer-title">
+        <div class="info-drawer__panel">
+          <header class="info-drawer__header">
+            <div>
+              <p class="eyebrow">Información de los datos</p>
+              <h2 id="info-drawer-title">Cómo interpretar estos datos</h2>
+            </div>
+            <button id="close-info-drawer" class="info-drawer__close" type="button" aria-label="Cerrar panel">×</button>
+          </header>
+          <div class="info-drawer__content">
+            <section id="interpretation-panel" aria-labelledby="interpretation-heading">
+              <h3 id="interpretation-heading">Cómo interpretar estos datos</h3>
+              <p>Los precios son promedios observados en los puntos de monitoreo que informaron datos para cada producto y semana. No representan una canasta ponderada ni un índice de precios al consumidor.</p>
+              <p>La variación semanal compara con la observación anterior disponible; la variación de 52 semanas compara con el dato publicado aproximadamente un año antes. “N/A” significa que no hay observaciones suficientes para calcular el cambio.</p>
+              <p>El promedio nacional reúne las regiones con datos disponibles, sin ponderarlas por población ni volumen de venta.</p>
+            </section>
+            <section id="notes-panel" aria-labelledby="notes-heading" hidden>
+              <h3 id="notes-heading">Notas y cobertura</h3>
+              <p>La disponibilidad cambia según producto, región, punto de monitoreo y semana. Las semanas sin publicación no se interpolan; la serie de cada producto muestra solo las observaciones disponibles.</p>
+              <p id="data-omission" class="info-drawer__notice" hidden></p>
+              <p>Fuente: <a href="https://datos.odepa.gob.cl/dataset/precios-consumidor" target="_blank" rel="noreferrer">Precios al Consumidor · ODEPA</a>. Datos publicados con atribución CC BY.</p>
+            </section>
+          </div>
+        </div>
+      </dialog>
+
+      <section id="scope-controls" class="controls" aria-label="Ámbito de los precios">
+        <label class="search-control catalog-only" for="product-search">
+          <span class="control-label">Buscar un producto</span>
+          <span class="search-control__input"><span aria-hidden="true">⌕</span><input id="product-search" type="search" placeholder="Buscar arroz, leche, papa…" autocomplete="off"></span>
+        </label>
+        <label class="select-control" for="region-filter">
+          <span class="control-label">Región</span>
+          <select id="region-filter"><option value="national">Nacional · regiones con datos</option></select>
+        </label>
+        <label class="select-control home-only" for="point-filter">
+          <span class="control-label">Punto de monitoreo</span>
+          <select id="point-filter"><option value="">Cargando…</option></select>
+        </label>
+        <div class="catalog-point-filter catalog-only" aria-label="Filtrar por punto de monitoreo">
+          <span id="catalog-point-label" class="control-label">Punto de monitoreo</span>
+          <details id="catalog-point-picker" class="catalog-point-picker">
+            <summary aria-labelledby="catalog-point-label catalog-point-summary">
+              <strong id="catalog-point-summary">Cargando…</strong>
+            </summary>
+            <div class="catalog-point-picker__menu">
+              <div class="catalog-point-picker__actions">
+                <button id="catalog-points-select-all" type="button" aria-label="Seleccionar todos los puntos de monitoreo">Seleccionar todos</button>
+                <button id="catalog-points-clear" type="button" aria-label="Limpiar todos los puntos de monitoreo">Limpiar</button>
+              </div>
+              <div id="catalog-point-options" class="catalog-point-picker__options" role="group" aria-label="Puntos de monitoreo"></div>
+            </div>
+          </details>
+        </div>
+        <label class="freshness-toggle catalog-only" for="recent-only">
+          <input id="recent-only" type="checkbox" checked>
+          <span class="freshness-toggle__copy">
+            <span class="freshness-toggle__label">Solo datos recientes</span>
+            <span id="freshness-note" class="freshness-toggle__note">Comparando con la última semana disponible.</span>
+          </span>
+        </label>
+      </section>
+
+      <div id="app-status" class="status-message" role="status" aria-live="polite">Cargando precios de ODEPA…</div>
+
+      <section id="dashboard-view" class="dashboard-view" aria-label="Resumen semanal de precios">
+        <section class="dashboard-section benchmark-section" aria-labelledby="benchmark-heading">
+          <div class="section-heading">
+            <div>
+              <h2 id="benchmark-heading">Productos de referencia</h2>
+              <p id="benchmark-note" class="section-heading__note">Precios promedio observados durante la semana de referencia.</p>
+            </div>
+            <p id="scope-summary" class="scope-summary">Supermercado · Nacional</p>
+          </div>
+          <div id="benchmark-cards" class="benchmark-grid" aria-live="polite"></div>
+        </section>
+
+        <section class="dashboard-section movers-section" aria-labelledby="movers-heading">
+          <div class="section-heading section-heading--compact">
+            <div>
+              <h2 id="movers-heading">Los precios que más se movieron</h2>
+              <p class="section-heading__note">Mayores variaciones frente a la observación anterior disponible, solo con datos recientes.</p>
+            </div>
+          </div>
+          <div class="table-wrap market-table-wrap">
+            <table class="market-table">
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col" class="numeric-column">Precio anterior</th>
+                  <th scope="col" class="numeric-column">Precio actual</th>
+                  <th scope="col" class="numeric-column">Variación</th>
+                </tr>
+              </thead>
+              <tbody id="movers-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dashboard-section benchmark-table-section" aria-labelledby="benchmark-table-heading">
+          <div class="section-heading section-heading--compact">
+            <div>
+              <h2 id="benchmark-table-heading">Precios de referencia</h2>
+              <p class="section-heading__note">Evolución de los productos seleccionados.</p>
+            </div>
+            <a class="catalog-callout__link" href="#/productos">Ver todos los productos <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="table-wrap market-table-wrap">
+            <table class="market-table benchmark-table">
+              <thead>
+                <tr>
+                  <th scope="col">Producto</th>
+                  <th scope="col" class="numeric-column">Precio promedio</th>
+                  <th scope="col" class="numeric-column">Esta semana</th>
+                  <th scope="col" class="numeric-column">Últimos 12 meses</th>
+                  <th scope="col" class="numeric-column">Semana</th>
+                </tr>
+              </thead>
+              <tbody id="benchmark-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </section>
+
+      <section id="catalog-page" class="catalog-page" aria-labelledby="page-title" hidden>
+        <div id="index-view" class="index-view" aria-label="Índice de productos">
+          <div class="catalog-toolbar">
+            <div class="catalog-count"><strong id="catalog-count">0</strong><span>resultados</span></div>
+            <label class="sort-control" for="catalog-sort"><span>Ordenar por</span>
+              <select id="catalog-sort">
+                <option value="name">Nombre (A–Z)</option>
+                <option value="price-desc">Precio (mayor a menor)</option>
+                <option value="price-asc">Precio (menor a mayor)</option>
+                <option value="change-up">Mayor alza semanal</option>
+                <option value="change-down">Mayor baja semanal</option>
+              </select>
+            </label>
+          </div>
+          <p class="catalog-table-hint">En pantallas pequeñas, desliza la tabla horizontalmente para ver todas las columnas.</p>
+          <div id="catalog-table-wrap" class="table-wrap catalog-table-wrap" tabindex="0" aria-label="Resultados de productos; tabla desplazable horizontalmente en pantallas pequeñas">
+            <table class="market-table catalog-table">
+              <thead><tr>
+                <th scope="col">Producto</th>
+                <th scope="col">Categoría</th>
+                <th scope="col">Punto de monitoreo</th>
+                <th scope="col" class="numeric-column">Precio promedio <small id="catalog-week-label"></small></th>
+                <th scope="col" class="numeric-column">Variación semanal <span class="column-info" title="Cambio frente a la observación anterior disponible">ⓘ</span></th>
+                <th scope="col" class="numeric-column">Variación 52 semanas <span class="column-info" title="Cambio frente a la observación de hace 52 semanas">ⓘ</span></th>
+                <th scope="col" aria-label="Abrir detalle"></th>
+              </tr></thead>
+              <tbody id="catalog-rows"></tbody>
+            </table>
+          </div>
+          <div id="catalog-empty" class="empty-state" hidden>
+            <h2 id="catalog-empty-title" class="empty-state__title">No encontramos productos</h2>
+            <p id="catalog-empty-copy" class="empty-state__copy"></p>
+            <button id="clear-search" class="text-button" type="button">Limpiar búsqueda</button>
+          </div>
+          <div class="pagination-bar">
+            <p id="catalog-range" class="catalog-range" aria-live="polite"></p>
+            <nav id="catalog-pagination" class="pagination" aria-label="Páginas de productos"></nav>
+          </div>
+        </div>
+      </section>
+
+      <section id="product-detail" class="product-detail" aria-labelledby="detail-title" hidden>
+        <button id="back-to-index" class="back-link" type="button">← Todos los productos</button>
+        <div class="detail-heading">
+          <p id="detail-group" class="eyebrow"></p>
+          <h2 id="detail-title"></h2>
+          <p id="detail-unit" class="detail-unit"></p>
+          <p id="detail-aliases" class="detail-aliases" hidden></p>
+        </div>
+        <div class="detail-summary" id="detail-meta" aria-label="Resumen del producto">
+          <div class="detail-summary__item">
+            <span class="detail-summary__label">Semana de referencia</span>
+            <strong class="detail-summary__main" id="detail-reference-week">—</strong>
+          </div>
+          <div class="detail-summary__item">
+            <span class="detail-summary__label">Región</span>
+            <strong class="detail-summary__main" id="detail-scope-region">—</strong>
+          </div>
+          <div class="detail-summary__item">
+            <span class="detail-summary__label">Puntos de monitoreo</span>
+            <strong class="detail-summary__main" id="detail-points-count">—</strong>
+            <span class="detail-summary__support" id="detail-points-note">Con datos disponibles</span>
+          </div>
+          <div class="detail-summary__item">
+            <span class="detail-summary__label">Rango observado</span>
+            <strong class="detail-summary__main" id="detail-range-value">—</strong>
+            <span class="detail-summary__support" id="detail-range-note">Promedio por punto</span>
+          </div>
+        </div>
+        <section class="chart-panel" aria-labelledby="chart-heading">
+          <div class="chart-panel__heading">
+            <div class="chart-panel__intro">
+              <p class="eyebrow">Evolución del precio</p>
+              <h3 id="chart-heading">Promedio semanal</h3>
+              <p id="detail-chart-note" class="chart-panel__description">Compara los precios promedio semanales por punto de monitoreo.</p>
+            </div>
+            <div class="detail-chart-controls" aria-label="Filtros del gráfico">
+              <div class="series-control">
+                <span id="detail-series-label" class="control-label">Puntos de monitoreo</span>
+                <details id="detail-series-picker" class="series-picker">
+                  <summary aria-labelledby="detail-series-label detail-series-summary">
+                    <strong id="detail-series-summary" class="series-picker__selection">Cargando…</strong>
+                  </summary>
+                  <div class="series-picker__menu">
+                    <p id="detail-series-availability" class="series-picker__hint">Elige qué precios comparar.</p>
+                    <div id="detail-series-list" class="series-picker__list" role="group" aria-label="Puntos de monitoreo a comparar"></div>
+                  </div>
+                </details>
+              </div>
+              <label class="select-control select-control--compact" for="detail-region">
+                <span class="control-label">Región</span>
+                <select id="detail-region"><option value="national">Nacional · regiones con datos</option></select>
+              </label>
+            </div>
+          </div>
+          <div class="chart-mode-row">
+            <div id="chart-mode-switch" class="chart-mode-switch" role="group" aria-label="Modo de visualización del precio">
+              <button type="button" data-chart-mode="nominal" aria-pressed="true">Precios observados</button>
+              <button type="button" data-chart-mode="inflation" aria-pressed="false">Comparar con IPC</button>
+            </div>
+            <span id="chart-mode-hint" class="chart-mode-hint">Precios promedio semanales en pesos chilenos.</span>
+          </div>
+          <section id="comparison-summary" class="comparison-summary" aria-label="Resumen de la comparación con IPC" hidden>
+            <p id="comparison-period" class="comparison-summary__period"></p>
+            <div id="comparison-metrics" class="comparison-metrics"></div>
+            <p id="comparison-note" class="comparison-summary__note"></p>
+            <p class="comparison-summary__source">IPC mensual empalmado, base promedio 2023=100 · publicación: <span id="ipc-publication-date"></span> · <a href="https://si3.bcentral.cl/siete/ES/Siete/Cuadro/CAP_PRECIOS/MN_CAP_PRECIOS/PEM_IND_IPC_2023?idSerie=G073.IPC.IND.2023.M" target="_blank" rel="noreferrer">fuente INE / Banco Central</a>.</p>
+          </section>
+          <div id="detail-series-legend" class="series-legend" aria-label="Leyenda de puntos de monitoreo"></div>
+          <div class="chart-wrap">
+            <canvas id="price-chart" role="img" aria-label="Gráfico comparativo de precios semanales" aria-describedby="detail-chart-summary"></canvas>
+            <p id="detail-chart-summary" class="visually-hidden"></p>
+          </div>
+          <div class="chart-panel__footer">
+            <span class="range-control__label">Período</span>
+            <div id="detail-range-shortcuts" class="range-shortcuts" role="group" aria-label="Período del gráfico">
+              <button type="button" data-detail-range="1y" aria-pressed="false">1 año</button>
+              <button type="button" data-detail-range="5y" aria-pressed="false">5 años</button>
+              <button type="button" data-detail-range="max" aria-pressed="true">Máx.</button>
+            </div>
+            <span id="detail-period-note" class="chart-panel__period-note">Historial semanal disponible</span>
+          </div>
+        </section>
+        <details id="history-disclosure" class="history-section">
+          <summary class="history-section__summary">
+            <span class="history-section__title">
+              <strong id="history-heading">Detalle semanal reciente</strong>
+              <span id="history-period-label" class="history-period-label">Últimas semanas por punto seleccionado</span>
+            </span>
+            <span id="history-toggle-label" class="history-section__toggle">Ver datos en tabla</span>
+          </summary>
+          <div class="table-wrap history-table-wrap">
+            <table>
+              <thead><tr><th scope="col">Semana</th><th scope="col">Punto de monitoreo</th><th scope="col">Mínimo</th><th scope="col">Promedio</th><th scope="col">Máximo</th></tr></thead>
+              <tbody id="history-rows"></tbody>
+            </table>
+          </div>
+        </details>
+        <div id="detail-status" class="status-message" role="status" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Fuente: <a href="https://datos.odepa.gob.cl/dataset/precios-consumidor" target="_blank" rel="noreferrer">Precios al Consumidor · ODEPA</a>.</p>
+      <p>Datos publicados con atribución CC BY. Valores nacionales: regiones con observaciones.</p>
+    </footer>
+  </body>
+</html>
